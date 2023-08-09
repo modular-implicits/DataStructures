@@ -75,20 +75,25 @@ let find {M : S} = M.find
 let map {M : S} = M.map
 let mapi {M : S} = M.mapi
 
-type ('key, 'a) qwert =
+type ('key, 'a) tree =
         Empty
-      | Node of ('key, 'a) qwert * 'key * 'a * ('key, 'a) qwert * int
+      | Node of ('key, 'a) tree * 'key * 'a * ('key, 'a) tree * int
 
 
 implicit module GetMap {X : Ord} : S 
         with type key = X.t and 
-        type 'a t = (X.t, 'a) qwert
+        type 'a t = (X.t, 'a) tree
         
         = struct
 
     type key = X.t
 
-    type 'a t = (key, 'a) qwert
+    type 'a t = (key, 'a) tree
+
+    let comp2 (x : X.t) (y : X.t) : int = match (X.compare x y) with
+                                  | LT -> -1
+                                  | EQ -> 0
+                                  | GT -> 1
     
     let height = function
         Empty -> 0
@@ -138,7 +143,7 @@ implicit module GetMap {X : Ord} : S
         Empty ->
           Node(Empty, x, data, Empty, 1)
       | Node(l, v, d, r, h) ->
-          let c = X.compare x v in
+          let c = comp2 x v in
           if c = 0 then
             Node(l, x, data, r, h)
           else if c < 0 then
@@ -150,7 +155,7 @@ implicit module GetMap {X : Ord} : S
         Empty ->
           raise Not_found
       | Node(l, v, d, r, _) ->
-          let c = X.compare x v in
+          let c = comp2 x v in
           if c = 0 then d
           else find x (if c < 0 then l else r)
 
@@ -158,7 +163,7 @@ implicit module GetMap {X : Ord} : S
         Empty ->
           false
       | Node(l, v, d, r, _) ->
-          let c = X.compare x v in
+          let c = comp2 x v in
           c = 0 || mem x (if c < 0 then l else r)
 
     let rec min_binding = function
@@ -188,7 +193,7 @@ implicit module GetMap {X : Ord} : S
         Empty ->
           Empty
       | Node(l, v, d, r, h) ->
-          let c = X.compare x v in
+          let c = comp2 x v in
           if c = 0 then
             merge l r
           else if c < 0 then
@@ -284,7 +289,7 @@ implicit module GetMap {X : Ord} : S
         Empty ->
           (Empty, None, Empty)
       | Node(l, v, d, r, _) ->
-          let c = X.compare x v in
+          let c = comp2 x v in
           if c = 0 then (l, Some d, r)
           else if c < 0 then
             let (ll, pres, rl) = split x l in (ll, pres, join rl v d r)
@@ -337,7 +342,7 @@ implicit module GetMap {X : Ord} : S
         | (End, _)  -> -1
         | (_, End) -> 1
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            let c = X.compare v1 v2 in
+            let c = comp2 v1 v2 in
             if c <> 0 then c else
             let c = cmp d1 d2 in
             if c <> 0 then c else
@@ -351,7 +356,7 @@ implicit module GetMap {X : Ord} : S
         | (End, _)  -> false
         | (_, End) -> false
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            X.compare v1 v2 = 0 && cmp d1 d2 &&
+            comp2 v1 v2 = 0 && cmp d1 d2 &&
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
       in equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
