@@ -80,7 +80,7 @@ type ('key, 'a) tree =
       | Node of ('key, 'a) tree * 'key * 'a * ('key, 'a) tree * int
 
 
-implicit module GetMap {X : Ord} : S 
+implicit module Make {X : Ord} : S 
         with type key = X.t and 
         type 'a t = (X.t, 'a) tree
         

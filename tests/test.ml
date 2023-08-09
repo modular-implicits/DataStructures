@@ -1,10 +1,11 @@
 
 open DataStructures.Mp;;
+open DataStructures
 open Imp.Data;;
 open Imp.Control;;
 
 
-let y = let z = empty {GetMap {Int}} in
+let y = let z = empty {Mp.Make {Int}} in
           add 5 "hello" z;;
 
 
