@@ -1,5 +1,5 @@
 (library
  (public_name dataStructures)
- (modules Mp)
+ (modules Mp St)
  (libraries imp)
  (synopsis "Experimental library using modular implicits"))

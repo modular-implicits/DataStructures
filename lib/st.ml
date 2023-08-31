@@ -1,4 +1,5 @@
-open Imp.Data;;
+
+
 
 (**************************************************************************)
 (*                                                                        *)
@@ -16,6 +17,12 @@ open Imp.Data;;
 (**************************************************************************)
 
 (* Sets over ordered types *)
+
+module type OrderedType =
+  sig
+    type t
+    val compare: t -> t -> int
+  end
 
 module type S =
   sig
@@ -100,22 +107,22 @@ let exists {M : S} = M.exists
 let to_list {M : S} = M.to_list
 let of_list {M : S} = M.of_list
 
-
-
 type 'a tree = Empty | Node of 'a node and 'a node = {l : 'a tree; v : 'a; r : 'a tree; h : int}
 
-implicit module Make {X : Ord} : S 
-    with type elt = X.t and
-    type t = elt tree = 
+
+implicit module Make {X : Imp.Data.Ord} : S with type elt = X.t and type t = X.t tree = 
   struct
     type elt = X.t
+    (* type 'a tree = Empty | Node of 'a node and 'a node = {l : 'a tree; v : 'a; r : 'a tree; h : int} *)
+
     type t = elt tree
 
 
-    let compare (x : X.t) (y : X.t) : int = match (X.compare x y) with
-                                  | LT -> -1
-                                  | EQ -> 0
-                                  | GT -> 1
+
+    let compare'' (x : elt) (y : elt) : int = match (X.compare x y) with
+    | LT -> -1
+    | EQ -> 0
+    | GT -> 1
 
     (* Sets are represented by balanced binary trees (the heights of the
        children differ by at most 2 *)
@@ -174,7 +181,7 @@ implicit module Make {X : Ord} : S
     let rec add x = function
         Empty -> Node{l=Empty; v=x; r=Empty; h=1}
       | Node{l; v; r} as t ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then t else
           if c < 0 then
             let ll = add x l in
@@ -273,7 +280,7 @@ implicit module Make {X : Ord} : S
         Empty ->
           (Empty, false, Empty)
       | Node{l; v; r} ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then (l, true, r)
           else if c < 0 then
             let (ll, pres, rl) = split x l in (ll, pres, join rl v r)
@@ -289,13 +296,13 @@ implicit module Make {X : Ord} : S
     let rec mem x = function
         Empty -> false
       | Node{l; v; r} ->
-          let c = compare x v in
+          let c = compare'' x v in
           c = 0 || mem x (if c < 0 then l else r)
 
     let rec remove x = function
         Empty -> Empty
       | (Node{l; v; r} as t) ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then merge l r
           else
             if c < 0 then
@@ -346,7 +353,7 @@ implicit module Make {X : Ord} : S
         Empty ->
           NotFound (Empty, (fun () -> Empty))
       | Node{l; v; r; _} ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then Found
           else if c < 0 then
             match split_bis x l with
@@ -390,7 +397,7 @@ implicit module Make {X : Ord} : S
       | (End, _)  -> -1
       | (_, End) -> 1
       | (More(v1, r1, e1), More(v2, r2, e2)) ->
-          let c = compare v1 v2 in
+          let c = compare'' v1 v2 in
           if c <> 0
           then c
           else compare_aux (cons_enum r1 e1) (cons_enum r2 e2)
@@ -408,7 +415,7 @@ implicit module Make {X : Ord} : S
       | _, Empty ->
           false
       | Node {l=l1; v=v1; r=r1}, (Node {l=l2; v=v2; r=r2} as t2) ->
-          let c = compare v1 v2 in
+          let c = compare'' v1 v2 in
           if c = 0 then
             subset l1 l2 && subset r1 r2
           else if c < 0 then
@@ -473,7 +480,7 @@ implicit module Make {X : Ord} : S
     let rec find x = function
         Empty -> raise Not_found
       | Node{l; v; r} ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then v
           else find x (if c < 0 then l else r)
 
@@ -552,7 +559,7 @@ implicit module Make {X : Ord} : S
     let rec find_opt x = function
         Empty -> None
       | Node{l; v; r} ->
-          let c = compare x v in
+          let c = compare'' x v in
           if c = 0 then Some v
           else find_opt x (if c < 0 then l else r)
 
@@ -560,8 +567,8 @@ implicit module Make {X : Ord} : S
       (* [join l v r] can only be called when (elements of l < v <
          elements of r); use [try_join l v r] when this property may
          not hold, but you hope it does hold in the common case *)
-      if (l = Empty || compare (max_elt l) v < 0)
-      && (r = Empty || compare v (min_elt r) < 0)
+      if (l = Empty || compare'' (max_elt l) v < 0)
+      && (r = Empty || compare'' v (min_elt r) < 0)
       then join l v r
       else union l (add v r)
 
@@ -627,5 +634,6 @@ implicit module Make {X : Ord} : S
       | [x0; x1; x2] -> add x2 (add x1 (singleton x0))
       | [x0; x1; x2; x3] -> add x3 (add x2 (add x1 (singleton x0)))
       | [x0; x1; x2; x3; x4] -> add x4 (add x3 (add x2 (add x1 (singleton x0))))
-      | _ -> of_sorted_list (List.sort_uniq compare l)
+      | _ -> of_sorted_list (List.sort_uniq compare'' l)
+
   end
