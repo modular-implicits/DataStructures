@@ -107,6 +107,8 @@ let exists {M : S} = M.exists
 let to_list {M : S} = M.to_list
 let of_list {M : S} = M.of_list
 
+
+
 type 'a tree = Empty | Node of 'a node and 'a node = {l : 'a tree; v : 'a; r : 'a tree; h : int}
 
 
@@ -637,3 +639,6 @@ implicit module Make {X : Imp.Data.Ord} : S with type elt = X.t and type t = X.t
       | _ -> of_sorted_list (List.sort_uniq compare'' l)
 
   end
+
+
+let create_set {O : Imp.Data.Ord} = empty {Make{O}}

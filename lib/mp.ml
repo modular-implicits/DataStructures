@@ -374,3 +374,6 @@ implicit module Make {X : Ord} : S
     let choose = min_binding
 
 end
+
+
+let create_map {X : Ord} = empty {Make {X}}
