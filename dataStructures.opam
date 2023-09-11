@@ -2,8 +2,8 @@ opam-version: "2.0"
 name: "dataStructures"
 synopsis: "Library providing Map and Set datastructures using modular implicits"
 version: "dev"
-maintainer: "yallop@gmail.com"
-authors: ["Leo White" "Jeremy Yallop"]
+maintainer: "dvlasits@gmail.com"
+authors: ["Daniel Vlasits"]
 homepage: "https://github.com/modular-implicits/DataStructures"
 dev-repo: "git+https://github.com/modular-implicits/DataStructures.git"
 bug-reports: "http://github.com/modular-implicits/DataStructures/issues"
