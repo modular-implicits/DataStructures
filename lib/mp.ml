@@ -50,30 +50,7 @@ module type S =
     val mapi: (key -> 'a -> 'b) -> 'a t -> 'b t
 end
 
-let empty {M : S} = M.empty
-let is_empty {M : S} = M.is_empty
-let mem {M : S} = M.mem
-let add {M : S} = M.add
-let singleton {M : S} = M.singleton
-let remove {M : S} = M.remove
-let merge {M : S} = M.merge
-let compare {M : S} = M.compare
-let equal {M : S} = M.equal
-let iter {M : S} = M.iter
-let fold {M : S} = M.fold
-let for_all {M : S} = M.for_all
-let exists {M : S} = M.exists
-let filter {M : S} = M.filter
-let partition {M : S} = M.partition
-let cardinal {M : S} = M.cardinal
-let bindings {M : S} = M.bindings
-let min_binding {M : S} = M.min_binding
-let max_binding {M : S} = M.max_binding
-let choose {M : S} = M.choose
-let split {M : S} = M.split
-let find {M : S} = M.find
-let map {M : S} = M.map
-let mapi {M : S} = M.mapi
+
 
 type ('key, 'a) tree =
         Empty
@@ -162,23 +139,23 @@ implicit module Make {X : Ord} : S
     let rec mem x = function
         Empty ->
           false
-      | Node(l, v, d, r, _) ->
+      | Node(l, v, _, r, _) ->
           let c = comp2 x v in
           c = 0 || mem x (if c < 0 then l else r)
 
     let rec min_binding = function
         Empty -> raise Not_found
-      | Node(Empty, x, d, r, _) -> (x, d)
-      | Node(l, x, d, r, _) -> min_binding l
+      | Node(Empty, x, d, _, _) -> (x, d)
+      | Node(l, _, _, _, _) -> min_binding l
 
     let rec max_binding = function
         Empty -> raise Not_found
-      | Node(l, x, d, Empty, _) -> (x, d)
-      | Node(l, x, d, r, _) -> max_binding r
+      | Node(_, x, d, Empty, _) -> (x, d)
+      | Node(_, _, _, r, _) -> max_binding r
 
     let rec remove_min_binding = function
         Empty -> invalid_arg "Map.remove_min_elt"
-      | Node(Empty, x, d, r, _) -> r
+      | Node(Empty, _, _, r, _) -> r
       | Node(l, x, d, r, _) -> bal (remove_min_binding l) x d r
 
     let merge t1 t2 =
@@ -192,7 +169,7 @@ implicit module Make {X : Ord} : S
     let rec remove x = function
         Empty ->
           Empty
-      | Node(l, v, d, r, h) ->
+      | Node(l, v, d, r, _) ->
           let c = comp2 x v in
           if c = 0 then
             merge l r
@@ -248,12 +225,12 @@ implicit module Make {X : Ord} : S
 
     let rec add_min_binding k v = function
       | Empty -> singleton k v
-      | Node (l, x, d, r, h) ->
+      | Node (l, x, d, r, _) ->
         bal (add_min_binding k v l) x d r
 
     let rec add_max_binding k v = function
       | Empty -> singleton k v
-      | Node (l, x, d, r, h) ->
+      | Node (l, x, d, r, _) ->
         bal l x d (add_max_binding k v r)
 
     (* Same as create and bal, but no assumptions are made on the
@@ -302,7 +279,7 @@ implicit module Make {X : Ord} : S
       | (Node (l1, v1, d1, r1, h1), _) when h1 >= height s2 ->
           let (l2, d2, r2) = split v1 s2 in
           concat_or_join (merge f l1 l2) v1 (f v1 (Some d1) d2) (merge f r1 r2)
-      | (_, Node (l2, v2, d2, r2, h2)) ->
+      | (_, Node (l2, v2, d2, r2, _)) ->
           let (l1, d1, r1) = split v2 s1 in
           concat_or_join (merge f l1 l2) v2 (f v2 d1 (Some d2)) (merge f r1 r2)
       | _ ->
@@ -375,5 +352,56 @@ implicit module Make {X : Ord} : S
 
 end
 
+let empty {M : S} = M.empty
+let is_empty {M : S} = M.is_empty
+let mem {M : S} = M.mem
+let add {M : S} = M.add
+let singleton {M : S} = M.singleton
+let remove {M : S} = M.remove
+let merge {M : S} = M.merge
+let compare {M : S} = M.compare
+let equal {M : S} = M.equal
+let iter {M : S} = M.iter
+let fold {M : S} = M.fold
+let for_all {M : S} = M.for_all
+let exists {M : S} = M.exists
+let filter {M : S} = M.filter
+let partition {M : S} = M.partition
+let cardinal {M : S} = M.cardinal
+let bindings {M : S} = M.bindings
+let min_binding {M : S} = M.min_binding
+let max_binding {M : S} = M.max_binding
+let choose {M : S} = M.choose
+let split {M : S} = M.split
+let find {M : S} = M.find
+let map {M : S} = M.map
+let mapi {M : S} = M.mapi
 
-let create_map {X : Ord} = empty {Make {X}}
+
+
+(*
+let empty {X : Ord} = empty' {Make {X}}
+let is_empty {X : Ord} = is_empty' {Make {X}}
+let mem {X : Ord} = mem' {Make {X}}
+let add {X : Ord} = add' {Make {X}}
+let singleton {X : Ord} = singleton' {Make{X}}
+let remove {X : Ord} = remove' {Make{X}}
+let merge {M : Ord} = merge' {Make{M}}
+let compare {M : Ord} = compare' {Make{M}}
+let equal {M : Ord} = equal' {Make{M}}
+let iter {M : Ord} = iter' {Make{M}}
+let fold {M : Ord} = fold' {Make{M}}
+let for_all {M : Ord} = for_all' {Make{M}}
+let exists {M : Ord} = exists' {Make{M}}
+let filter {M : Ord} = filter' {Make{M}}
+let partition {M : Ord} = partition' {Make{M}}
+let cardinal {M : Ord} = cardinal' {Make{M}}
+let bindings {M : Ord} = bindings' {Make{M}}
+let min_binding {M : Ord} = min_binding' {Make{M}}
+let max_binding {M : Ord} = max_binding' {Make{M}}
+let choose {M : Ord} = choose' {Make{M}}
+let split {M : Ord} = split' {Make{M}}
+let find {M : Ord} = find' {Make{M}}
+let map {M : Ord} = map' {Make{M}}
+let mapi {M : Ord} = mapi' {Make{M}}
+*)
